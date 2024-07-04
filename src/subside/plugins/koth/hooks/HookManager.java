@@ -38,7 +38,7 @@ public class HookManager extends AbstractModule {
         for(AbstractHook hook : hooks){
             try {
                 hook.onDisable();
-            } catch(Exception e){}
+            } catch(Exception e) {}
             if(hook instanceof Listener){
                 HandlerList.unregisterAll((Listener)hook);
             }
