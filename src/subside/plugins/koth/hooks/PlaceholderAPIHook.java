@@ -2,7 +2,7 @@ package subside.plugins.koth.hooks;
 
 import org.bukkit.entity.Player;
 
-import me.clip.placeholderapi.external.EZPlaceholderHook;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import subside.plugins.koth.KothPlugin;
 import subside.plugins.koth.areas.Koth;
 import subside.plugins.koth.gamemodes.RunningKoth;
@@ -10,16 +10,19 @@ import subside.plugins.koth.gamemodes.TimeObject;
 import subside.plugins.koth.modules.Lang;
 import subside.plugins.koth.scheduler.Schedule;
 
-/**
-* Made in collaboration with F64_Rx <3
-*/
-public class PlaceholderAPIHook extends EZPlaceholderHook {
-    KothPlugin plugin;
+public class PlaceholderAPIHook extends PlaceholderExpansion {
+    private KothPlugin plugin;
     
     public PlaceholderAPIHook(KothPlugin plugin) {
-        super(plugin, "koth");
-        
         this.plugin = plugin;
+    }
+
+    @Override
+    public boolean register() {
+        if (!canRegister()) {
+            return false;
+        }
+        return super.register();
     }
 
     @Override
@@ -28,8 +31,7 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
             return "";
         }
         
-        
-        // Loop over all all live KoTH's
+        // Loop over all live KoTH's
         if(identifier.startsWith("live_")){
             for(Koth koth : plugin.getKothHandler().getAvailableKoths()){
                 String replacer = replaceHolders(identifier, "live_"+koth.getName().toLowerCase()+"_", koth, player);
@@ -37,7 +39,7 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
             }
         }
         
-        // Loop over all schedules.
+        // Loop over all schedules
         if(identifier.startsWith("next_")){
             if(plugin.getScheduleHandler().getNextEvent() != null){
                 Schedule schedule = plugin.getScheduleHandler().getNextEvent();
@@ -58,7 +60,7 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
             }
         }
         
-        // Check if  there is a running KoTH
+        // Check if there is a running KoTH
         if (plugin.getKothHandler().getRunningKoth() == null) return "";
         
         RunningKoth rKoth = plugin.getKothHandler().getRunningKoth();
@@ -71,26 +73,18 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
     }
     
     public String replaceHolders(String identifier, String prefix, Koth koth, Player player){
-        
         if (identifier.equals(prefix+"name")) return koth.getName();
         if (identifier.equals(prefix+"x")) return koth.getMiddle().getBlockX() + "";
         if (identifier.equals(prefix+"y")) return koth.getMiddle().getBlockY() + "";
         if (identifier.equals(prefix+"z")) return koth.getMiddle().getBlockZ() + "";
         if (identifier.equals(prefix+"world")) return koth.getMiddle().getWorld().getName();
-        
-        if (identifier.equals(prefix+"player_inarea")) return koth.isInArea(player)?"True":"False";
-        
-
-        if(identifier.equals(prefix+"nextevent")) return TimeObject.getTimeTillNextEvent(plugin, koth);
-                
-        if(identifier.equals(prefix+"lastwinner")){
+        if (identifier.equals(prefix+"player_inarea")) return koth.isInArea(player) ? "True" : "False";
+        if (identifier.equals(prefix+"nextevent")) return TimeObject.getTimeTillNextEvent(plugin, koth);
+        if (identifier.equals(prefix+"lastwinner")) {
             if(koth.getLastWinner() == null) return "";
             return koth.getLastWinner().getName();
         }
-        
-        if(identifier.equals(prefix+"isrunning")) return koth.isRunning()?"True":"False";
-
-        
+        if (identifier.equals(prefix+"isrunning")) return koth.isRunning() ? "True" : "False";
         if (identifier.equals(prefix+"loot_x")) {
             if (koth.getLootPos() == null) return "No Loot Set";
             return "" + koth.getLootPos().getBlockX();
@@ -105,14 +99,13 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
         }
         if (identifier.equals(prefix+"loot_world")) {
             if (koth.getLootPos() == null) return "No Loot Set";
-            return "" + koth.getLootPos().getWorld().getName();
+            return koth.getLootPos().getWorld().getName();
         }
         
         RunningKoth rKoth = koth.getRunningKoth();
-        if (rKoth != null){
+        if (rKoth != null) {
             return replaceRunningKothHolders(identifier, prefix, rKoth);
         }
-        
         
         return null;
     }
@@ -124,8 +117,7 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
         return null;
     }
     
-    public String replaceRunningKothHolders(String identifier, String prefix, RunningKoth rKoth){
-
+    public String replaceRunningKothHolders(String identifier, String prefix, RunningKoth rKoth) {
         if (identifier.equals(prefix+"time_secondsleft")) return "" + rKoth.getTimeObject().getSecondsLeft();
         if (identifier.equals(prefix+"time_minutesleft")) return "" + rKoth.getTimeObject().getMinutesLeft();
         if (identifier.equals(prefix+"time_secondscapped")) return "" + rKoth.getTimeObject().getSecondsCapped();
@@ -138,19 +130,29 @@ public class PlaceholderAPIHook extends EZPlaceholderHook {
         if (identifier.equals(prefix+"time_lengthinseconds")) return "" + rKoth.getTimeObject().getLengthInSeconds();
         if (identifier.equals(prefix+"time_percentagecapped")) return "" + rKoth.getTimeObject().getPercentageCapped();
         if (identifier.equals(prefix+"time_percentageleft")) return "" + rKoth.getTimeObject().getPercentageLeft();
-        
         if (identifier.equals(prefix+"currentcapper")) {
             if (rKoth.getCapper() == null) return Lang.HOOKS_PLACEHOLDERAPI_NOONECAPPING[0];
             return rKoth.getCapper().getName();
         }
-        
-        
         if (identifier.equals(prefix+"loot_name")) {
             if (rKoth.getLootChest() == null) return "No Loot Set";
             return rKoth.getLootChest();
         }
-        
         return null;
     }
 
+    @Override
+    public String getIdentifier() {
+        return "koth";
+    }
+
+    @Override
+    public String getAuthor() {
+        return plugin.getDescription().getAuthors().toString();
+    }
+
+    @Override
+    public String getVersion() {
+        return plugin.getDescription().getVersion();
+    }
 }
